@@ -148,5 +148,105 @@
     "id": "q30",
     "question": "expired tls certificate on edge-01 prod, handshake errors, Edge Networking",
     "expected_ids": ["runbook:expired-tls#1", "runbook:expired-tls#2", "incident:inc-011"]
+  },
+  {
+    "id": "q31",
+    "question": "out of disk space on payments-db-03",
+    "expected_ids": ["incident:inc-002", "inventory:payments-db-03"]
+  },
+  {
+    "id": "q32",
+    "question": "staging card charges are failing because the database pool is used up",
+    "expected_ids": ["incident:inc-004", "inventory:payments-db-03"]
+  },
+  {
+    "id": "q33",
+    "question": "the checkout thing is slow in staging",
+    "expected_ids": ["incident:inc-006", "incident:inc-016", "inventory:checkout-api-03"]
+  },
+  {
+    "id": "q34",
+    "question": "Devon Patel says staging name lookups are failing",
+    "expected_ids": ["incident:inc-008", "inventory:dns-03", "ownership:dns-resolver"]
+  },
+  {
+    "id": "q35",
+    "question": "name resolution is broken in staging",
+    "expected_ids": ["incident:inc-008", "inventory:dns-03"]
+  },
+  {
+    "id": "q36",
+    "question": "the edge proxy certificate expired in staging",
+    "expected_ids": ["incident:inc-012", "inventory:edge-03"]
+  },
+  {
+    "id": "q37",
+    "question": "redis is evicting keys in staging",
+    "expected_ids": ["incident:inc-020", "inventory:redis-03"]
+  },
+  {
+    "id": "q38",
+    "question": "Ellis Romero says the stream is lagging in staging",
+    "expected_ids": ["incident:inc-018", "inventory:kafka-03", "ownership:kafka"]
+  },
+  {
+    "id": "q39",
+    "question": "the worker is crashlooping in staging",
+    "expected_ids": ["incident:inc-010", "inventory:worker-03"]
+  },
+  {
+    "id": "q40",
+    "question": "billing-api is leaking memory in staging",
+    "expected_ids": ["incident:inc-014", "inventory:billing-02"]
+  },
+  {
+    "id": "q41",
+    "question": "memory leak on billing-02",
+    "expected_ids": ["incident:inc-014", "inventory:billing-02"]
+  },
+  {
+    "id": "q42",
+    "question": "crashloop on worker-03",
+    "expected_ids": ["incident:inc-010", "inventory:worker-03"]
+  },
+  {
+    "id": "q43",
+    "question": "expired tls on edge-03",
+    "expected_ids": ["incident:inc-012", "inventory:edge-03"]
+  },
+  {
+    "id": "q44",
+    "question": "certificate mismatch on auth-03",
+    "expected_ids": ["incident:inc-024", "inventory:auth-03"]
+  },
+  {
+    "id": "q45",
+    "question": "upstream 5xx on the staging load balancer",
+    "expected_ids": ["incident:inc-022", "inventory:edge-03"]
+  },
+  {
+    "id": "q46",
+    "question": "Harper Singh says invoices are leaking memory in staging",
+    "expected_ids": ["incident:inc-014", "inventory:billing-02", "ownership:billing-api"]
+  },
+  {
+    "id": "q47",
+    "question": "Frankie Alvarez says the cache is evicting keys in staging",
+    "expected_ids": ["incident:inc-020", "inventory:redis-03", "ownership:redis"]
+  },
+  {
+    "id": "q48",
+    "question": "Gray Ibarra says the async jobs keep restarting in staging",
+    "expected_ids": ["incident:inc-010", "inventory:worker-03", "ownership:worker"]
+  },
+  {
+    "id": "q49",
+    "question": "Blake Okonkwo says the storefront is slow in staging",
+    "expected_ids": ["incident:inc-006", "incident:inc-016", "inventory:checkout-api-03"]
+  },
+  {
+    "id": "q50",
+    "question": "Payments Platform says the staging database volume is full",
+    "expected_ids": ["incident:inc-002", "inventory:payments-db-03", "ownership:payments-db"]
   }
 ]

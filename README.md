@@ -29,7 +29,7 @@ From [eval/results.md](eval/results.md).
 | Rewriting only | 0.6444 |
 | Rewriting + metadata filters | 0.6444 |
 
-Rewrite fell back to the raw query with no filters on 30 of 30 questions, because no API key was set.
+Rewrite fell back to the raw query with no filters on 30 of 30 questions, because no API key was set. That tie is not evidence that rewriting or metadata filters help. `eval/questions.json` now has 20 more questions aimed at cases where plain search returns the wrong host or environment. Those 20 have not been scored. Do not claim a precision gain until `python eval/run_precision.py` is run with an API key in `.env`.
 
 ### Retrieval stage
 
