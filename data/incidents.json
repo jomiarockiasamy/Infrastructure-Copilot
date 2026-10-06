@@ -1,0 +1,402 @@
+[
+  {
+    "id": "inc-001",
+    "date": "2026-02-11",
+    "host": "payments-db-01",
+    "service": "payments-db",
+    "environment": "prod",
+    "symptom": "disk full",
+    "root_cause": "On payments-db-01 in prod the data volume hit 100 percent because WAL archives and a base backup shared the Postgres disk. Writes failed with No space left on device during the settlement batch.",
+    "fix": "Deleted expired WAL archives older than the last base backup, ran a checkpoint, and card-charge writes succeeded again."
+  },
+  {
+    "id": "inc-002",
+    "date": "2026-03-02",
+    "host": "payments-db-03",
+    "service": "payments-db",
+    "environment": "staging",
+    "symptom": "disk full",
+    "root_cause": "Staging host payments-db-03 filled during a replay drill because archive_cleanup was left disabled on the staging volume. The staging data disk reported No space left on device, separate from the prod settlement outage.",
+    "fix": "Enabled archive_cleanup on the staging replica and moved the replay dump to object storage."
+  },
+  {
+    "id": "inc-003",
+    "date": "2026-01-19",
+    "host": "payments-db-01",
+    "service": "payments-db",
+    "environment": "prod",
+    "symptom": "connection pool exhausted",
+    "root_cause": "The payments db in prod timed out because a leaked transaction held sessions until the connection pool was exhausted on payments-db-01. Checkout could not charge cards.",
+    "fix": "Cancelled idle-in-transaction backends and restarted the payments pool so new checkouts could borrow a session."
+  },
+  {
+    "id": "inc-004",
+    "date": "2026-04-04",
+    "host": "payments-db-03",
+    "service": "payments-db",
+    "environment": "staging",
+    "symptom": "connection pool exhausted",
+    "root_cause": "A load test against staging payments-db-03 opened one session per virtual user and never returned them. The staging pool maxed out while prod stayed healthy.",
+    "fix": "Capped the load-test client and recycled the staging pooler."
+  },
+  {
+    "id": "inc-005",
+    "date": "2026-02-21",
+    "host": "checkout-api-01",
+    "service": "checkout-api",
+    "environment": "prod",
+    "symptom": "high cpu",
+    "root_cause": "checkout-api-01 in prod pegged the CPU during price calculations after a promo-math change recomputed every cart line. The storefront was compute bound.",
+    "fix": "Rolled back the price-rule change and CPU fell under 60 percent."
+  },
+  {
+    "id": "inc-006",
+    "date": "2026-05-01",
+    "host": "checkout-api-03",
+    "service": "checkout-api",
+    "environment": "staging",
+    "symptom": "high cpu",
+    "root_cause": "Staging checkout-api-03 ran a synthetic promo benchmark that pinned one core. Production checkout-api-01 was not affected.",
+    "fix": "Stopped the staging benchmark job."
+  },
+  {
+    "id": "inc-007",
+    "date": "2026-03-14",
+    "host": "dns-01",
+    "service": "dns-resolver",
+    "environment": "prod",
+    "symptom": "dns failure",
+    "root_cause": "dns-01 in prod served NXDOMAIN for internal names after a bad zone serial dropped checkout.internal. Pods could not resolve names.",
+    "fix": "Restored the known-good zone, bumped the serial, and dig succeeded."
+  },
+  {
+    "id": "inc-008",
+    "date": "2026-03-18",
+    "host": "dns-03",
+    "service": "dns-resolver",
+    "environment": "staging",
+    "symptom": "dns failure",
+    "root_cause": "Staging resolver dns-03 was pointed at an empty stub zone during a lab exercise. Prod dns-01 kept answering.",
+    "fix": "Repointed the staging resolver at the staging zone file."
+  },
+  {
+    "id": "inc-009",
+    "date": "2026-01-08",
+    "host": "worker-01",
+    "service": "worker",
+    "environment": "prod",
+    "symptom": "crashloop",
+    "root_cause": "worker-01 in prod entered a crashloop because the deploy mounted an empty config file and the async job pod exited on the missing key.",
+    "fix": "Rolled back the worker image, restored the config map, and the restart count returned to zero."
+  },
+  {
+    "id": "inc-010",
+    "date": "2026-06-12",
+    "host": "worker-03",
+    "service": "worker",
+    "environment": "staging",
+    "symptom": "crashloop",
+    "root_cause": "Staging worker-03 crashlooped after a typo in a staging-only feature flag file. The prod worker config was untouched.",
+    "fix": "Corrected the staging flag file and the pod stayed up."
+  },
+  {
+    "id": "inc-011",
+    "date": "2026-04-19",
+    "host": "edge-01",
+    "service": "edge-proxy",
+    "environment": "prod",
+    "symptom": "expired tls",
+    "root_cause": "edge-01 in prod served an expired tls certificate. Browsers reported the certificate date is past and handshakes failed.",
+    "fix": "Installed the renewed certificate and reloaded the public proxy."
+  },
+  {
+    "id": "inc-012",
+    "date": "2026-04-22",
+    "host": "edge-03",
+    "service": "edge-proxy",
+    "environment": "staging",
+    "symptom": "expired tls",
+    "root_cause": "The staging proxy edge-03 used a short-lived lab certificate that lapsed over the weekend. Prod edge-01 had already been renewed.",
+    "fix": "Issued a new staging certificate for edge-03."
+  },
+  {
+    "id": "inc-013",
+    "date": "2026-02-02",
+    "host": "billing-01",
+    "service": "billing-api",
+    "environment": "prod",
+    "symptom": "memory leak",
+    "root_cause": "billing-01 in prod leaked memory because the invoice renderer cached every PDF in a global map. RSS never returned to the heap baseline.",
+    "fix": "Shipped a bounded PDF cache and restarted billing-api."
+  },
+  {
+    "id": "inc-014",
+    "date": "2026-07-09",
+    "host": "billing-02",
+    "service": "billing-api",
+    "environment": "staging",
+    "symptom": "memory leak",
+    "root_cause": "Staging billing-02 retained debug invoice payloads for a profiler session. Prod billing-01 was already on the bounded cache.",
+    "fix": "Turned off the staging profiler and restarted billing-02."
+  },
+  {
+    "id": "inc-015",
+    "date": "2026-05-16",
+    "host": "checkout-api-01",
+    "service": "checkout-api",
+    "environment": "prod",
+    "symptom": "network latency",
+    "root_cause": "checkout-api-01 in prod saw network latency on downstream calls to inventory. A congested hop made those calls sluggish while the storefront CPU stayed idle.",
+    "fix": "Shifted checkout traffic off the congested path and dependency latency returned to baseline."
+  },
+  {
+    "id": "inc-016",
+    "date": "2026-05-20",
+    "host": "checkout-api-03",
+    "service": "checkout-api",
+    "environment": "staging",
+    "symptom": "network latency",
+    "root_cause": "Staging checkout-api-03 crossed a bandwidth-limited lab link during a failover test. Prod checkout-api-01 was on the healthy path.",
+    "fix": "Ended the failover test and staging latency dropped."
+  },
+  {
+    "id": "inc-017",
+    "date": "2026-03-29",
+    "host": "kafka-01",
+    "service": "kafka",
+    "environment": "prod",
+    "symptom": "consumer lag",
+    "root_cause": "kafka-01 in prod fell behind on the payments topic. A slow handler stopped the consumer group from committing offsets, so consumer lag climbed.",
+    "fix": "Restarted the stalled consumers and offsets began to advance."
+  },
+  {
+    "id": "inc-018",
+    "date": "2026-08-01",
+    "host": "kafka-03",
+    "service": "kafka",
+    "environment": "staging",
+    "symptom": "consumer lag",
+    "root_cause": "Staging kafka-03 lagged because a test consumer paused on a poison message in a scratch topic. The prod payments group was current.",
+    "fix": "Skipped the poison message on the staging group."
+  },
+  {
+    "id": "inc-019",
+    "date": "2026-01-27",
+    "host": "redis-01",
+    "service": "redis",
+    "environment": "prod",
+    "symptom": "cache eviction",
+    "root_cause": "redis-01 in prod started evicting keys after a new prefix stored full carts without a TTL. Checkout cache misses jumped when maxmemory was reached.",
+    "fix": "Deleted the unbounded prefix, set TTLs, and evictions stopped."
+  },
+  {
+    "id": "inc-020",
+    "date": "2026-06-30",
+    "host": "redis-03",
+    "service": "redis",
+    "environment": "staging",
+    "symptom": "cache eviction",
+    "root_cause": "Staging redis-03 was sized to a tiny maxmemory for a class and evicted demo keys. Prod redis-01 was below its memory ceiling.",
+    "fix": "Raised the staging maxmemory for the class and left prod unchanged."
+  },
+  {
+    "id": "inc-021",
+    "date": "2026-04-11",
+    "host": "edge-01",
+    "service": "edge-proxy",
+    "environment": "prod",
+    "symptom": "upstream 5xx",
+    "root_cause": "edge-01 in prod returned upstream 5xx for checkout because two targets were marked up while still booting. Clients saw server errors after a successful tls handshake.",
+    "fix": "Drained the booting upstreams until readiness passed and the 5xx rate fell."
+  },
+  {
+    "id": "inc-022",
+    "date": "2026-09-02",
+    "host": "edge-03",
+    "service": "edge-proxy",
+    "environment": "staging",
+    "symptom": "upstream 5xx",
+    "root_cause": "Staging edge-03 pointed at a checkout build that exited on purpose for a chaos drill. Prod edge-01 kept serving ready targets.",
+    "fix": "Ended the chaos drill and staging health checks went green."
+  },
+  {
+    "id": "inc-023",
+    "date": "2026-02-28",
+    "host": "auth-01",
+    "service": "auth-service",
+    "environment": "prod",
+    "symptom": "certificate mismatch",
+    "root_cause": "auth-01 in prod presented a certificate whose name did not match the hostname. Login failed tls because the cert name was wrong, and the date was still valid.",
+    "fix": "Installed the prod certificate that lists auth-01 and reloaded auth-service."
+  },
+  {
+    "id": "inc-024",
+    "date": "2026-03-08",
+    "host": "auth-03",
+    "service": "auth-service",
+    "environment": "staging",
+    "symptom": "certificate mismatch",
+    "root_cause": "Staging auth-03 served a certificate for auth.lab.internal during a name-rotation rehearsal. Prod auth-01 already had the matching name.",
+    "fix": "Restored the staging hostname on the auth-03 certificate."
+  },
+  {
+    "id": "inc-025",
+    "date": "2026-06-03",
+    "host": "payments-db-02",
+    "service": "payments-db",
+    "environment": "prod",
+    "symptom": "replication lag",
+    "root_cause": "payments-db-02 in us-west-2 applied WAL several minutes behind the primary after a long analytics transaction.",
+    "fix": "Cancelled the analytics transaction and lag caught up."
+  },
+  {
+    "id": "inc-026",
+    "date": "2026-07-15",
+    "host": "search-01",
+    "service": "search-api",
+    "environment": "prod",
+    "symptom": "slow query",
+    "root_cause": "search-01 ran a leading-wildcard query that scanned the whole product index.",
+    "fix": "Rejected leading wildcards and added a trigram field."
+  },
+  {
+    "id": "inc-027",
+    "date": "2026-08-19",
+    "host": "notify-01",
+    "service": "notifications",
+    "environment": "prod",
+    "symptom": "webhook timeout",
+    "root_cause": "notify-01 waited on a partner endpoint that never acknowledged receipt.",
+    "fix": "Shortened the webhook timeout and queued retries."
+  },
+  {
+    "id": "inc-028",
+    "date": "2026-01-30",
+    "host": "inventory-01",
+    "service": "inventory-api",
+    "environment": "prod",
+    "symptom": "backup failed",
+    "root_cause": "The nightly inventory snapshot on inventory-01 lost its object-storage credential.",
+    "fix": "Rotated the backup credential and reran the snapshot."
+  },
+  {
+    "id": "inc-029",
+    "date": "2026-05-05",
+    "host": "kafka-02",
+    "service": "kafka",
+    "environment": "prod",
+    "symptom": "clock skew",
+    "root_cause": "kafka-02 drifted four seconds from NTP and started rejecting produce requests.",
+    "fix": "Stepped the clock back to NTP and restarted the broker."
+  },
+  {
+    "id": "inc-030",
+    "date": "2026-09-14",
+    "host": "redis-02",
+    "service": "redis",
+    "environment": "prod",
+    "symptom": "oom killed",
+    "root_cause": "redis-02 was killed by the cgroup after a one-off key import ignored maxmemory.",
+    "fix": "Restored the maxmemory setting and reloaded the replica from redis-01."
+  },
+  {
+    "id": "inc-031",
+    "date": "2026-04-07",
+    "host": "worker-02",
+    "service": "worker",
+    "environment": "prod",
+    "symptom": "queue backlog",
+    "root_cause": "worker-02 paused consumers during a deploy window and the job queue depth tripled.",
+    "fix": "Resumed consumers and scaled worker-02 by one replica until the depth fell."
+  },
+  {
+    "id": "inc-032",
+    "date": "2026-08-23",
+    "host": "auth-02",
+    "service": "auth-service",
+    "environment": "prod",
+    "symptom": "rate limit",
+    "root_cause": "A mobile retry storm tripped the login rate limit on auth-02.",
+    "fix": "Raised the burst for an hour and shipped client backoff."
+  },
+  {
+    "id": "inc-033",
+    "date": "2026-03-25",
+    "host": "edge-04",
+    "service": "edge-proxy",
+    "environment": "prod",
+    "symptom": "packet loss",
+    "root_cause": "edge-04 in eu-west-1 saw 3 percent packet loss on the peering link.",
+    "fix": "Shifted EU traffic to edge-01 until the peer stabilized."
+  },
+  {
+    "id": "inc-034",
+    "date": "2026-02-17",
+    "host": "billing-03",
+    "service": "billing-api",
+    "environment": "dev",
+    "symptom": "deployment rollback",
+    "root_cause": "A dev deploy of billing-03 failed its smoke test and the pipeline rolled it back.",
+    "fix": "Fixed the smoke fixture and redeployed the dev build."
+  },
+  {
+    "id": "inc-035",
+    "date": "2026-07-01",
+    "host": "dns-02",
+    "service": "dns-resolver",
+    "environment": "prod",
+    "symptom": "resolver timeout",
+    "root_cause": "dns-02 timed out on upstream recursion because the EU forwarder was unreachable.",
+    "fix": "Pointed dns-02 at the secondary forwarder."
+  },
+  {
+    "id": "inc-036",
+    "date": "2026-06-21",
+    "host": "search-03",
+    "service": "search-api",
+    "environment": "staging",
+    "symptom": "index lag",
+    "root_cause": "search-03 stopped consuming product updates after a staging reindex lock was left in place.",
+    "fix": "Cleared the lock and the staging index caught up."
+  },
+  {
+    "id": "inc-037",
+    "date": "2026-09-09",
+    "host": "inventory-02",
+    "service": "inventory-api",
+    "environment": "prod",
+    "symptom": "inode exhaustion",
+    "root_cause": "inventory-02 ran out of inodes because a debug logger created one file per request.",
+    "fix": "Deleted the debug files and rotated the logger."
+  },
+  {
+    "id": "inc-038",
+    "date": "2026-04-28",
+    "host": "notify-02",
+    "service": "notifications",
+    "environment": "staging",
+    "symptom": "retry storm",
+    "root_cause": "notify-02 retried a dead staging webhook with no backoff and saturated the worker.",
+    "fix": "Added jittered backoff on the staging notifier."
+  },
+  {
+    "id": "inc-039",
+    "date": "2026-08-11",
+    "host": "payments-db-05",
+    "service": "payments-db",
+    "environment": "prod",
+    "symptom": "checkpoint spike",
+    "root_cause": "payments-db-05 in eu-west-1 stalled readers during a huge checkpoint after a long bulk load.",
+    "fix": "Spread checkpoints with a shorter timeout and reran the bulk load in smaller batches."
+  },
+  {
+    "id": "inc-040",
+    "date": "2026-01-12",
+    "host": "checkout-api-04",
+    "service": "checkout-api",
+    "environment": "dev",
+    "symptom": "feature flag",
+    "root_cause": "checkout-api-04 in dev served an unfinished discount path because a flag defaulted to on.",
+    "fix": "Set the flag default to off and redeployed the dev checkout."
+  }
+]

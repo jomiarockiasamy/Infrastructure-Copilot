@@ -1,0 +1,9 @@
+.env
+.DS_Store
+.chroma/
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+*.db
+*.sqlite

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "q01",
+    "question": "Why is payments-db-01 in prod out of disk space? Postgres says no space left on device while writing WAL.",
+    "expected_ids": ["runbook:disk-full#0", "runbook:disk-full#2", "incident:inc-001"]
+  },
+  {
+    "id": "q02",
+    "question": "the card charge datastore in the live environment filled its volume and writes are failing on payments-db-01",
+    "expected_ids": ["runbook:disk-full#0", "runbook:disk-full#2", "incident:inc-001"]
+  },
+  {
+    "id": "q03",
+    "question": "why is the payments db in prod timing out? connection pool looks exhausted on payments-db-01",
+    "expected_ids": ["runbook:db-pool-exhausted#0", "runbook:db-pool-exhausted#2", "incident:inc-003"]
+  },
+  {
+    "id": "q04",
+    "question": "checkout can't charge cards, production payments database is refusing new db sessions",
+    "expected_ids": ["runbook:db-pool-exhausted#0", "runbook:db-pool-exhausted#2", "incident:inc-003"]
+  },
+  {
+    "id": "q05",
+    "question": "checkout-api-01 in prod is pegged at high cpu during price calculations",
+    "expected_ids": ["runbook:high-cpu#0", "runbook:high-cpu#2", "incident:inc-005"]
+  },
+  {
+    "id": "q06",
+    "question": "the storefront api in production is burning a whole core on promo math, host checkout-api-01",
+    "expected_ids": ["runbook:high-cpu#0", "runbook:high-cpu#2", "incident:inc-005"]
+  },
+  {
+    "id": "q07",
+    "question": "dns-01 in prod is failing lookups, NXDOMAIN for internal service names",
+    "expected_ids": ["runbook:dns-failure#0", "runbook:dns-failure#2", "incident:inc-007"]
+  },
+  {
+    "id": "q08",
+    "question": "pods can't resolve names in the live environment, resolver host dns-01",
+    "expected_ids": ["runbook:dns-failure#0", "runbook:dns-failure#2", "incident:inc-007"]
+  },
+  {
+    "id": "q09",
+    "question": "worker-01 in prod is in a crashloop after the bad config mount",
+    "expected_ids": ["runbook:pod-crashloop#0", "runbook:pod-crashloop#2", "incident:inc-009"]
+  },
+  {
+    "id": "q10",
+    "question": "the async job pod on worker-01 keeps restarting in production",
+    "expected_ids": ["runbook:pod-crashloop#0", "runbook:pod-crashloop#2", "incident:inc-009"]
+  },
+  {
+    "id": "q11",
+    "question": "edge-01 prod is serving an expired tls certificate and clients see handshake errors",
+    "expected_ids": ["runbook:expired-tls#0", "runbook:expired-tls#2", "incident:inc-011"]
+  },
+  {
+    "id": "q12",
+    "question": "browsers say the certificate date is past on the public proxy edge-01 in the live environment",
+    "expected_ids": ["runbook:expired-tls#0", "runbook:expired-tls#2", "incident:inc-011"]
+  },
+  {
+    "id": "q13",
+    "question": "billing-01 in prod memory keeps growing and never returns to the heap baseline",
+    "expected_ids": ["runbook:memory-leak#0", "runbook:memory-leak#2", "incident:inc-013"]
+  },
+  {
+    "id": "q14",
+    "question": "invoice api host billing-01 in production is leaking memory overnight",
+    "expected_ids": ["runbook:memory-leak#0", "runbook:memory-leak#2", "incident:inc-013"]
+  },
+  {
+    "id": "q15",
+    "question": "checkout-api-01 prod calls to downstream are slow, network latency spiked",
+    "expected_ids": ["runbook:network-latency#0", "runbook:network-latency#2", "incident:inc-015"]
+  },
+  {
+    "id": "q16",
+    "question": "the storefront in the live environment has sluggish downstream calls from checkout-api-01",
+    "expected_ids": ["runbook:network-latency#0", "runbook:network-latency#2", "incident:inc-015"]
+  },
+  {
+    "id": "q17",
+    "question": "kafka-01 prod consumer lag is climbing on the payments topic",
+    "expected_ids": ["runbook:kafka-lag#0", "runbook:kafka-lag#2", "incident:inc-017"]
+  },
+  {
+    "id": "q18",
+    "question": "the stream cluster host kafka-01 in production is behind on the payments topic",
+    "expected_ids": ["runbook:kafka-lag#0", "runbook:kafka-lag#2", "incident:inc-017"]
+  },
+  {
+    "id": "q19",
+    "question": "redis-01 prod is evicting keys and checkout cache misses jumped",
+    "expected_ids": ["runbook:redis-eviction#0", "runbook:redis-eviction#2", "incident:inc-019"]
+  },
+  {
+    "id": "q20",
+    "question": "the cache node redis-01 in the live environment is dropping keys under memory pressure",
+    "expected_ids": ["runbook:redis-eviction#0", "runbook:redis-eviction#2", "incident:inc-019"]
+  },
+  {
+    "id": "q21",
+    "question": "edge-01 prod load balancer is returning upstream 5xx for checkout",
+    "expected_ids": ["runbook:load-balancer-5xx#0", "runbook:load-balancer-5xx#2", "incident:inc-021"]
+  },
+  {
+    "id": "q22",
+    "question": "the public proxy edge-01 in production is showing server errors from the upstream pool",
+    "expected_ids": ["runbook:load-balancer-5xx#0", "runbook:load-balancer-5xx#2", "incident:inc-021"]
+  },
+  {
+    "id": "q23",
+    "question": "auth-01 prod presents a certificate whose name doesn't match the hostname",
+    "expected_ids": ["runbook:cert-mismatch#0", "runbook:cert-mismatch#2", "incident:inc-023"]
+  },
+  {
+    "id": "q24",
+    "question": "login host auth-01 in the live environment fails tls because the cert name is wrong",
+    "expected_ids": ["runbook:cert-mismatch#0", "runbook:cert-mismatch#2", "incident:inc-023"]
+  },
+  {
+    "id": "q25",
+    "question": "Payments Platform on-call: payments-db-01 prod disk full, no space left on device",
+    "expected_ids": ["runbook:disk-full#1", "runbook:disk-full#2", "incident:inc-001"]
+  },
+  {
+    "id": "q26",
+    "question": "Avery Chen says the payments database in prod is timing out, pool exhausted on payments-db-01",
+    "expected_ids": ["runbook:db-pool-exhausted#1", "runbook:db-pool-exhausted#2", "incident:inc-003"]
+  },
+  {
+    "id": "q27",
+    "question": "Blake Okonkwo reports checkout-api-01 prod high cpu during price calculations",
+    "expected_ids": ["runbook:high-cpu#1", "runbook:high-cpu#2", "incident:inc-005"]
+  },
+  {
+    "id": "q28",
+    "question": "Devon Patel: dns failure on dns-01 in prod, internal lookups return NXDOMAIN",
+    "expected_ids": ["runbook:dns-failure#1", "runbook:dns-failure#2", "incident:inc-007"]
+  },
+  {
+    "id": "q29",
+    "question": "pod crashloop on worker-01 prod, bad config mount, Async Jobs",
+    "expected_ids": ["runbook:pod-crashloop#1", "runbook:pod-crashloop#2", "incident:inc-009"]
+  },
+  {
+    "id": "q30",
+    "question": "expired tls certificate on edge-01 prod, handshake errors, Edge Networking",
+    "expected_ids": ["runbook:expired-tls#1", "runbook:expired-tls#2", "incident:inc-011"]
+  }
+]

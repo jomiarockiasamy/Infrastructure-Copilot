@@ -1,0 +1,13 @@
+service,owner,oncall
+payments-db,Payments Platform,Avery Chen
+checkout-api,Checkout,Blake Okonkwo
+auth-service,Identity,Casey Nguyen
+dns-resolver,Edge Networking,Devon Patel
+edge-proxy,Edge Networking,Devon Patel
+kafka,Data Streaming,Ellis Romero
+redis,Caching,Frankie Alvarez
+worker,Async Jobs,Gray Ibarra
+billing-api,Billing,Harper Singh
+inventory-api,Catalog,Indigo Brooks
+notifications,Messaging,Jordan Hale
+search-api,Search,Kai Okada
