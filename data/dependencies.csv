@@ -1,0 +1,11 @@
+caller,callee,why
+checkout-api,payments-db,Card charges are written on the payments primary
+checkout-api,redis,Carts live on the checkout cache
+checkout-api,auth-service,Checkout requires a login session
+checkout-api,dns-resolver,Storefront pods resolve internal names
+edge-proxy,checkout-api,Public traffic is balanced onto the storefront
+edge-proxy,auth-service,Login traffic terminates on the public proxy
+billing-api,payments-db,Invoices read settled charges
+worker,kafka,Async jobs consume the payments topic
+notifications,kafka,Partner webhooks are produced onto Kafka
+search-api,inventory-api,Product search reads the catalog

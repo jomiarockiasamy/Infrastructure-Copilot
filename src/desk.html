@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>On-call desk</title>
+  <style>
+    :root {
+      --bg: #101410;
+      --rail: #171c18;
+      --card: #1d2420;
+      --card-2: #232b26;
+      --line: #313b33;
+      --ink: #f3efe2;
+      --muted: #93a094;
+      --amber: #f0c14b;
+      --amber-ink: #241c08;
+      --green: #b7d7a8;
+      --coral: #e39b86;
+      --blue: #9ec4d4;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(900px 420px at 0% -10%, rgba(240, 193, 75, 0.08), transparent 55%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      letter-spacing: 0.01em;
+    }
+    button, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: 100%;
+    }
+    .rail {
+      border-right: 1px solid var(--line);
+      background: rgba(23, 28, 24, 0.92);
+      padding: 22px 18px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .brand p, .hint, .meta, .signal span, .quiet {
+      color: var(--muted);
+    }
+    .brand p { margin: 4px 0 0; font-size: 13px; }
+    .open-count {
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    textarea {
+      width: 100%;
+      min-height: 148px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      background: #101510;
+      border-radius: 12px;
+      padding: 12px 12px 28px;
+      line-height: 1.45;
+    }
+    textarea:focus { outline: 2px solid rgba(240, 193, 75, 0.45); border-color: transparent; }
+    .composer { position: relative; }
+    .hint {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+    .triage {
+      margin-top: 10px;
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      background: var(--amber);
+      color: var(--amber-ink);
+      padding: 11px 14px;
+      font-weight: 650;
+    }
+    .triage:disabled { opacity: 0.55; cursor: wait; }
+    .error { min-height: 1.2em; margin: 8px 0 0; color: var(--coral); font-size: 13px; }
+    .shift-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 6px;
+    }
+    .shift-head h2 {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .shift { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .shift button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 9px 10px;
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+    .shift button.selected { border-color: var(--line); background: var(--card); }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      margin-top: 6px;
+      background: var(--amber);
+    }
+    .dot.acknowledged { background: var(--blue); }
+    .dot.resolved { background: var(--green); }
+    .shift strong { display: block; font-weight: 600; font-size: 14px; }
+    .shift small { color: var(--muted); font-size: 12px; }
+    .stage { padding: 28px 32px 48px; max-width: 980px; }
+    .empty h2 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; font-weight: 560; letter-spacing: -0.03em; }
+    .empty p { margin: 0 0 18px; color: var(--muted); max-width: 46ch; }
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; }
+    .examples button, .ghost {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+    .examples button:hover, .ghost:hover { border-color: var(--amber); }
+    .page-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
+    .page-head h2 {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      font-weight: 560;
+    }
+    .sub { margin: 8px 0 0; color: var(--muted); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ghost.primary { background: var(--ink); color: #172017; border-color: transparent; }
+    .banner {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(227, 155, 134, 0.12);
+      color: var(--coral);
+    }
+    .signals {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .signal {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--card);
+      min-height: 64px;
+    }
+    .signal.on { border-color: rgba(240, 193, 75, 0.7); }
+    .signal span { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .signal strong { display: block; margin-top: 6px; font-weight: 600; word-break: break-word; }
+    .signal:not(.on) strong { color: var(--muted); font-weight: 500; }
+    .grid { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 14px; margin-top: 14px; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .cause { margin: 0 0 14px; line-height: 1.5; }
+    .step {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+      line-height: 1.4;
+    }
+    .step input { margin-top: 3px; accent-color: #c9a227; }
+    .step.done span { color: var(--muted); text-decoration: line-through; }
+    .incident { padding: 12px 0; border-top: 1px solid var(--line); }
+    .incident:first-of-type { border-top: 0; padding-top: 0; }
+    .incident header { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .reasons { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .reasons span, .who {
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--card-2);
+      color: var(--blue);
+      font-size: 12px;
+    }
+    .fix { margin: 0; line-height: 1.45; }
+    .who-row { display: flex; flex-direction: column; gap: 8px; }
+    .who-row p { margin: 0; }
+    .touch { padding: 8px 0; border-top: 1px solid var(--line); }
+    .touch strong { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
+    .touch p { margin: 4px 0 0; color: var(--muted); }
+    details { margin-top: 14px; }
+    details summary { cursor: pointer; color: var(--muted); }
+    .chunk {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .chunk pre {
+      white-space: pre-wrap;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12.5px;
+      line-height: 1.45;
+      margin: 8px 0 0;
+    }
+    .narrative { white-space: pre-wrap; line-height: 1.5; margin: 8px 0 0; }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .rail { border-right: 0; border-bottom: 1px solid var(--line); }
+      .grid, .signals { grid-template-columns: 1fr; }
+      .page-head { flex-direction: column; }
+      .page-head h2 { font-size: 32px; }
+      .stage { padding: 22px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <div class="brand">
+        <div>
+          <h1>On-call desk</h1>
+          <p>Paste the page. Work the runbook.</p>
+        </div>
+        <div class="open-count" id="open-count"></div>
+      </div>
+      <form id="composer">
+        <div class="composer">
+          <textarea id="page-text" placeholder="Paste the alert, or describe what is paging you."></textarea>
+          <div class="hint">⌘/Ctrl + Enter</div>
+        </div>
+        <button class="triage" id="triage" type="submit">Triage this page</button>
+        <p class="error" id="error"></p>
+      </form>
+      <div class="shift-head">
+        <h2>This shift</h2>
+      </div>
+      <ul class="shift" id="shift"></ul>
+    </aside>
+    <main class="stage" id="stage"></main>
+  </div>
+  <script>
+    const text = document.querySelector("#page-text");
+    const error = document.querySelector("#error");
+    const stage = document.querySelector("#stage");
+    const shift = document.querySelector("#shift");
+    const openCount = document.querySelector("#open-count");
+    const triageButton = document.querySelector("#triage");
+    const examples = [
+      "payments-db-01 in prod is out of disk space",
+      "checkout-api-01 is pegged at high cpu",
+      "NXDOMAIN from dns-01, Devon Patel is paged",
+      "edge-01 certificate date is past"
+    ];
+    let selected = null;
+    let pages = [];
+
+    function el(tag, className, content) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (content != null) node.textContent = content;
+      return node;
+    }
+
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    async function api(url, body) {
+      const response = await fetch(url, body == null ? undefined : {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Request failed.");
+      return payload;
+    }
+
+    function renderEmpty() {
+      clear(stage);
+      const wrap = el("section", "empty");
+      wrap.append(
+        el("h2", null, "What is paging you?"),
+        el("p", null, "The desk names the host, opens the runbook as a checklist, and shows the fix from the last matching incident. A model is optional.")
+      );
+      const row = el("div", "examples");
+      for (const sample of examples) {
+        const button = el("button", null, sample);
+        button.type = "button";
+        button.addEventListener("click", () => {
+          text.value = sample;
+          triage();
+        });
+        row.append(button);
+      }
+      wrap.append(row);
+      stage.append(wrap);
+    }
+
+    function signalBoard(card) {
+      const board = el("div", "signals");
+      for (const signal of card.signals) {
+        const cell = el("div", signal.value ? "signal on" : "signal");
+        cell.append(el("span", null, signal.name), el("strong", null, signal.value || "not found"));
+        board.append(cell);
+      }
+      return board;
+    }
+
+    function renderPage(page) {
+      const card = page.card;
+      clear(stage);
+      const head = el("div", "page-head");
+      const titles = el("div");
+      const headline = card.host || card.service || "Unlinked page";
+      titles.append(el("h2", null, headline));
+      const bits = [card.service, card.environment, card.region, card.symptom].filter(Boolean);
+      const sub = el("p", "sub");
+      sub.textContent = bits.join("  ·  ");
+      if (card.owner || card.oncall) {
+        sub.textContent += (bits.length ? "  ·  " : "") + [card.owner, card.oncall].filter(Boolean).join(", ");
+      }
+      titles.append(sub);
+      const actions = el("div", "actions");
+      for (const [label, status, primary] of [
+        ["Acknowledge", "acknowledged", false],
+        ["Resolve", "resolved", true],
+        ["Reopen", "open", false]
+      ]) {
+        if (page.status === status) continue;
+        const button = el("button", primary ? "ghost primary" : "ghost", label);
+        button.type = "button";
+        button.addEventListener("click", () => setStatus(page.id, status));
+        actions.append(button);
+      }
+      head.append(titles, actions);
+      stage.append(head);
+
+      if (card.warning) stage.append(el("div", "banner", card.warning));
+      if (card.index_status && card.index_status !== "ok" && card.index_status !== "provided") {
+        const note = {
+          missing: "No retrieval index yet. Run python -m src.ingest for cited chunks. The checklist still comes from the runbook.",
+          empty: "The retrieval index is empty. Run python -m src.ingest for cited chunks.",
+          error: "Retrieval failed. The checklist, owner, and last fix are still from the local files."
+        }[card.index_status];
+        if (note) stage.append(el("div", "banner", note));
+      }
+      stage.append(signalBoard(card));
+      const meta = el("p", "quiet");
+      meta.textContent = "Confidence: " + card.confidence + ". " + card.confidence_note;
+      stage.append(meta);
+
+      const grid = el("div", "grid");
+      const left = el("section", "panel");
+      left.append(el("h3", null, card.runbook ? "Runbook · " + card.runbook : "Runbook"));
+      if (card.likely_cause) left.append(el("p", "cause", card.likely_cause));
+      if (card.checklist.length) {
+        card.checklist.forEach((step, index) => {
+          const row = el("label", page.checks[index] ? "step done" : "step");
+          const box = document.createElement("input");
+          box.type = "checkbox";
+          box.checked = Boolean(page.checks[index]);
+          box.addEventListener("change", () => toggleCheck(page, index, box.checked));
+          row.append(box, el("span", null, step));
+          left.append(row);
+        });
+      } else {
+        left.append(el("p", "quiet", "No symptom matched a runbook, so nothing was invented."));
+      }
+      const right = el("section", "panel");
+      right.append(el("h3", null, "Last time this failed"));
+      if (!card.similar.length) {
+        right.append(el("p", "quiet", "No past incident shares this host, service, or symptom."));
+      }
+      for (const item of card.similar) {
+        const block = el("article", "incident");
+        const header = el("header");
+        header.append(el("strong", null, item.incident_id + " · " + item.date), el("span", null, item.host));
+        const reasons = el("div", "reasons");
+        for (const reason of item.reasons) reasons.append(el("span", null, reason));
+        block.append(header, reasons, el("p", "fix", item.fix));
+        right.append(block);
+      }
+      grid.append(left, right);
+      stage.append(grid);
+
+      if (card.callers.length || card.needs.length) {
+        const touchPanel = el("section", "panel");
+        touchPanel.style.marginTop = "14px";
+        touchPanel.append(el("h3", null, "What else this touches"));
+        for (const touch of card.callers) appendTouch(touchPanel, "Called by", touch);
+        for (const touch of card.needs) appendTouch(touchPanel, "Calls", touch);
+        stage.append(touchPanel);
+      }
+
+      if (card.narrative) {
+        const note = el("details");
+        note.open = true;
+        note.append(el("summary", null, "Model note, from retrieved chunks only"));
+        note.append(el("div", "narrative", card.narrative));
+        stage.append(note);
+      }
+
+      if (card.evidence.length) {
+        const evidence = el("details");
+        const summary = el("summary", null, "Evidence · " + card.evidence.length + " chunks");
+        evidence.append(summary);
+        for (const chunk of card.evidence) {
+          const block = el("div", "chunk");
+          block.append(el("strong", null, chunk.chunk_id + "  ·  distance " + chunk.distance.toFixed(3)));
+          block.append(el("pre", null, chunk.text));
+          evidence.append(block);
+        }
+        stage.append(evidence);
+      }
+    }
+
+    function appendTouch(panel, label, touch) {
+      const row = el("div", "touch");
+      row.append(el("strong", null, label + " " + touch.service));
+      row.append(el("p", null, touch.why));
+      panel.append(row);
+    }
+
+    function renderShift() {
+      clear(shift);
+      const open = pages.filter((page) => page.status === "open").length;
+      openCount.textContent = open ? open + " open" : "clear";
+      if (!pages.length) {
+        shift.append(el("li", "quiet", "Nothing triaged yet."));
+        return;
+      }
+      for (const page of pages) {
+        const item = el("li");
+        const button = el("button", page.id === selected ? "selected" : "");
+        button.type = "button";
+        const dot = el("span", "dot " + page.status);
+        const copy = el("span");
+        copy.append(el("strong", null, page.title));
+        const when = new Date(page.created_at);
+        copy.append(el("small", null, page.status + " · " + when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })));
+        button.append(dot, copy);
+        button.addEventListener("click", () => select(page.id));
+        item.append(button);
+        shift.append(item);
+      }
+    }
+
+    async function loadShift() {
+      const payload = await api("/api/shift");
+      pages = payload.pages;
+      renderShift();
+    }
+
+    async function select(id) {
+      selected = id;
+      renderShift();
+      const page = await api("/api/shift/" + id);
+      text.value = page.text;
+      renderPage(page);
+    }
+
+    async function triage() {
+      error.textContent = "";
+      const body = text.value.trim();
+      if (!body) {
+        error.textContent = "Paste a page first.";
+        return;
+      }
+      triageButton.disabled = true;
+      try {
+        const page = await api("/api/triage", { text: body });
+        await loadShift();
+        selected = page.id;
+        renderShift();
+        renderPage(page);
+      } catch (err) {
+        error.textContent = err.message;
+      } finally {
+        triageButton.disabled = false;
+      }
+    }
+
+    async function setStatus(id, status) {
+      const page = await api("/api/shift/" + id, { status });
+      await loadShift();
+      selected = id;
+      renderShift();
+      renderPage(page);
+    }
+
+    async function toggleCheck(page, index, checked) {
+      const checks = page.checks.slice();
+      checks[index] = checked;
+      const updated = await api("/api/shift/" + page.id, { checks });
+      renderPage(updated);
+    }
+
+    document.querySelector("#composer").addEventListener("submit", (event) => {
+      event.preventDefault();
+      triage();
+    });
+    text.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        triage();
+      }
+    });
+
+    renderEmpty();
+    loadShift().catch((err) => {
+      error.textContent = err.message;
+    });
+  </script>
+</body>
+</html>

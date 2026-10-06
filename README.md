@@ -19,6 +19,31 @@ flowchart LR
 
 The rewrite cache is keyed by the question after lowercasing and collapsing whitespace. A hit skips the LLM rewrite. Retrieval is keyed by the rewritten query, filters, and `k`. A hit skips the embedding and the Chroma query. Filters relax one field at a time if too few chunks match. The answer uses only those chunks, and a step is dropped when a citation is not in the retrieved set.
 
+## On-call desk
+
+The daily surface is a local page. Paste the alert. It does not need an API key.
+
+```bash
+python -m src.serve
+```
+
+Open http://127.0.0.1:8765. The same card prints in the terminal:
+
+```bash
+python -m src.triage "payments-db-01 in prod is out of disk space"
+```
+
+What happens, in order:
+
+1. A linker matches the page against inventory, ownership, and symptom phrases. Host, service, environment, and symptom are filled without a model. If the page names an environment that disagrees with that host's inventory row, the desk keeps the inventory environment and says so.
+2. The matching runbook becomes a checklist. Steps are the sentences in the file. A repeated Steps section is ignored. If the symptom is missing, no runbook is guessed.
+3. Past incidents with the same symptom are ranked, and the recorded fix is shown. A different failure on the same host is left out. Environment alone is not enough.
+4. `data/dependencies.csv` lists who calls this service and what it calls.
+5. When the Chroma index exists, the same retriever attaches cited chunks. When an API key is set, a grounded narrative is added and still has to cite those chunks.
+6. Each page is stored in a shift log. You can acknowledge it, check off steps, and mark it resolved.
+
+The terminal path above does the same work and prints the card as text.
+
 ## Results
 
 From [eval/results.md](eval/results.md).
